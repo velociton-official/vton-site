@@ -1,0 +1,36 @@
+{
+  "name": "vton-telegram-miner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch backend/src/server.ts",
+    "build": "tsc -p backend/tsconfig.json",
+    "start": "node dist/server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx scripts/seed.ts",
+    "bot": "tsx backend/src/bot.ts",
+    "check": "tsc -p backend/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@ton/core": "^0.62.0",
+    "@ton/crypto": "^3.3.0",
+    "@ton/ton": "^16.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "grammy": "^1.38.4",
+    "helmet": "^8.1.0",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.5.2",
+    "prisma": "^6.16.2",
+    "tsx": "^4.19.1",
+    "typescript": "^5.9.2"
+  }
+}
