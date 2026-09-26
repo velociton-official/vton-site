@@ -1,0 +1,5 @@
+{
+  "url": "https://YOUR-DOMAIN.example/tonconnect-manifest.json",
+  "name": "$VTON Miner",
+  "iconUrl": "https://YOUR-DOMAIN.example/icon.png"
+}
