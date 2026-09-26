@@ -121,7 +121,7 @@ app.post('/api/tasks/:id/verify', async (req, res) => {
       create: { userId: user.id, taskId: task.id, completedAt: new Date(), rewardPaid: true },
       update: { completedAt: new Date(), rewardPaid: true }
     });
-    await tx.user.update({ where: { id: user.id }, data: { balanceRaw: { increment: task.rewardRaw } } });
+    await tx.user.update({ where: { id: user.id }, data: { balanceRaw: { increment: task.rewardRaw.toString() } } });
     return completed;
   });
 
@@ -153,7 +153,7 @@ app.post('/api/claim', async (req, res) => {
   const claim = await prisma.$transaction(async tx => {
     const locked = await tx.user.updateMany({
       where: { id: user.id, balanceRaw: { gte: amount } },
-      data: { balanceRaw: { decrement: amount } }
+      data: { balanceRaw: { decrement: amount.toString() } }
     });
     if (locked.count !== 1) throw new Error('Balance changed; retry');
     return tx.claim.create({ data: { userId: user.id, amountRaw: amount.toString(), wallet: walletAddress } });
