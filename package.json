@@ -10,8 +10,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx scripts/seed.ts",
-    "bot": "tsx backend/src/bot.ts",
-    "check": "tsc -p backend/tsconfig.json --noEmit"
+    "bot": "node dist/bot.js",
+    "check": "tsc -p backend/tsconfig.json --noEmit",
+    "db:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
