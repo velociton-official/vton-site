@@ -8,7 +8,7 @@ function refCode() {
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
-async function ensureUser(tg: any, referralCode?: string) {
+async function ensureUser(tg: { id: number; username?: string; first_name: string; last_name?: string; language_code?: string }, referralCode?: string) {
   const existing = await prisma.user.findUnique({ where: { telegramId: BigInt(tg.id) } });
   if (existing) return existing;
 
@@ -34,7 +34,7 @@ async function ensureUser(tg: any, referralCode?: string) {
 bot.command('start', async ctx => {
   const payload = ctx.match?.trim() || '';
   const referralCode = payload.startsWith('ref_') ? payload.slice(4) : undefined;
-  const user = await ensureUser(ctx.from, referralCode);
+  if (!ctx.from) return;\n  const user = await ensureUser(ctx.from, referralCode);
   const appUrl = env.PUBLIC_URL + '/?startapp=ref_' + user.referralCode;
   await ctx.reply(
     '<b>$VTON Miner</b>\n\nПривіт, ' + escapeHtml(ctx.from.first_name) + '!\n\nВідкрий Mini App та накопичуй $VTON.',
