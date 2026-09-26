@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#030504">
+<title>$VTON Miner</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2.2.0/dist/tonconnect-ui.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#030504;color:#fff;font-family:Arial,sans-serif}.app{max-width:520px;min-height:100vh;margin:auto;padding:18px 18px 100px;text-align:center;background:radial-gradient(circle at 50% 35%,rgba(255,190,0,.14),transparent 30%)}.status{display:inline-block;padding:7px 14px;border:1px solid #26332c;border-radius:20px;color:#00ff9d}.balance{font-size:38px;font-weight:900;margin:14px 0;color:#fff}.balance small{color:#ffd21a;font-size:17px}.wallet{margin:7px auto;padding:10px;border:1px solid #3c3214;border-radius:22px;background:#0b0d0b;color:#aaa;font-size:12px}.wallet b{color:#ffd21a}.gain{margin:24px auto 8px;padding:12px;border-radius:25px;color:#00ff9d;background:#07100c;border:1px solid #173c2d;font-size:40px;font-weight:900}.coin{width:230px;height:230px;margin:28px auto;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,#fff0a0,#c18a14 55%,#5b3a05);border:10px solid #d5a323;box-shadow:inset 0 0 0 6px #7b4e06,0 0 45px rgba(255,190,0,.22);user-select:none}.coin b{font-size:58px;color:#211d15}.claim{width:100%;height:68px;border:0;border-radius:22px;background:linear-gradient(100deg,#ffd51a,#ff9800);font-size:20px;font-weight:900}.btn{margin:8px 4px;padding:11px 15px;border-radius:13px;border:1px solid #303733;background:#111613;color:#fff;font-weight:800}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);height:78px;background:#020303;border-top:1px solid #222;display:flex;justify-content:space-around}.nav button{border:0;background:none;color:#777;font-weight:800}.nav .active{color:#ffd21a}.panel{display:none;text-align:left;padding:10px 0}.card{padding:15px;margin:10px 0;border:1px solid #202a25;border-radius:18px;background:#0b100e}.muted{color:#8e9893;font-size:13px}.modal{display:none;position:fixed;inset:0;background:#000b;align-items:flex-end}.modal.show{display:flex}.sheet{width:min(520px,100%);padding:20px;background:#0a0e0c;border-radius:24px 24px 0 0}.sheet h2{color:#ffd21a}
+</style>
+</head>
+<body>
+<div class="app">
+<div id="mine" class="panel" style="display:block">
+<div class="status">● <b id="ready">READY</b></div>
+<div class="balance"><span id="balance">0.0000</span> <small>$VTON</small></div>
+<div class="wallet">HOLDING WALLET: <b id="holding">0.0000 VTON</b></div>
+<div class="wallet">POOL WALLET: <b id="pool">0.0000 VTON</b></div>
+<div class="wallet">ON-CHAIN WALLET: <b id="onchain">0.0000 VTON</b></div>
+<div class="gain" id="rate">+0.0000</div>
+<div class="coin" id="coin"><b>VTN</b></div>
+<button class="claim" id="claim">CLAIM</button>
+<div><button class="btn" id="connect">🔗 Connect TON wallet</button><button class="btn" id="refBtn">👥 Referrals</button></div>
+</div>
+<div id="tasksPanel" class="panel"><h2>Tasks</h2><div id="tasks"></div></div>
+<div id="friendsPanel" class="panel"><h2>Friends</h2><div class="card"><div class="muted">Реферальне посилання</div><p id="refLink"></p><button class="btn" id="copyRef">Copy</button><p id="refCount"></p></div></div>
+<div id="profilePanel" class="panel"><h2>Profile</h2><div class="card"><p id="profileName"></p><p>Wallet: <span id="profileWallet">не підключений</span></p><p>Claimed: <b id="claimed">0</b> $VTON</p></div></div>
+<nav class="nav"><button class="active" data-panel="mine">⛏<br>Mine</button><button data-panel="tasksPanel">📝<br>Tasks</button><button data-panel="friendsPanel">👥<br>Friends</button><button data-panel="profilePanel">👤<br>Profile</button></nav>
+</div>
+<div id="modal" class="modal"><div class="sheet"><button id="close" class="btn">✕</button><h2>$VTON</h2><p id="msg"></p></div></div>
+<script>
+const tg=window.Telegram&&window.Telegram.WebApp;
+if(tg){tg.ready();tg.expand();tg.setHeaderColor('#030504');tg.setBackgroundColor('#030504')}
+const initData=tg&&tg.initData||'';
+let me=null,tonUI=null;
+const $=id=>document.getElementById(id);
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({},opt.headers||{}, {'x-telegram-init-data':initData,'Content-Type':'application/json'});return fetch(path,opt).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d})}
+function fmt(v){return Number(v||0).toFixed(4)}
+function show(x){$('msg').textContent=x;$('modal').classList.add('show')}
+function render(){if(!me)return;$('balance').textContent=fmt(me.balance);$('holding').textContent=fmt(me.balance)+' VTON';$('pool').textContent=fmt(me.balance)+' VTON';$('onchain').textContent=fmt(me.onChainBalance);$('claimed').textContent=fmt(me.claimed);$('rate').textContent='+'+fmt(me.miningRatePerSecond);$('profileName').textContent=me.firstName||me.username||'Telegram user';$('profileWallet').textContent=me.walletAddress||'не підключений'}
+async function load(){try{me=await api('/api/me');render();await loadTasks();const r=await api('/api/referral');$('refLink').textContent=r.link;$('refCount').textContent='Запрошено: '+r.referrals}catch(e){$('ready').textContent='AUTH ERROR';show(e.message)}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+async function loadTasks(){const list=await api('/api/tasks');$('tasks').innerHTML=list.map(function(t){return '<div class="card"><b>'+esc(t.title)+'</b><p class="muted">'+esc(t.description||'')+'<br>Reward: '+fmt(t.reward)+' VTON</p><button class="btn" '+(t.completed?'disabled':'')+' onclick="verifyTask(\''+t.id+'\')">'+(t.completed?'✓ Done':'Verify')+'</button></div>'}).join('')||'<p class="muted">Завдань поки немає.</p>'}
+async function verifyTask(id){try{const d=await api('/api/tasks/'+id+'/verify',{method:'POST',body:'{}'});show('+'+d.reward+' $VTON');await load()}catch(e){show(e.message)}}
+$('claim').onclick=async function(){if(!me||!me.walletAddress)return show('Спочатку підключи TON-гаманець.');try{const d=await api('/api/claim',{method:'POST',body:JSON.stringify({address:me.walletAddress})});show('Відправлено '+d.amount+' $VTON. Claim ID: '+d.claimId);await load()}catch(e){show(e.message)}}
+$('coin').onclick=async function(){try{me=await api('/api/me');render();if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('light')}catch(e){show(e.message)}}
+$('connect').onclick=async function(){try{if(!tonUI){tonUI=new TON_CONNECT_UI.TonConnectUI({manifestUrl:location.origin+'/tonconnect-manifest.json'});tonUI.onStatusChange(async function(wallet){if(wallet&&wallet.account&&wallet.account.address){try{await api('/api/wallet',{method:'POST',body:JSON.stringify({address:wallet.account.address})});await load()}catch(e){show(e.message)}}})}await tonUI.openModal()}catch(e){show(e.message)}}
+$('refBtn').onclick=function(){$('[data-panel="friendsPanel"]').click()}
+$('copyRef').onclick=function(){navigator.clipboard&&navigator.clipboard.writeText($('refLink').textContent).then(function(){show('Посилання скопійовано')})}
+$('close').onclick=function(){$('modal').classList.remove('show')}
+document.querySelectorAll('.nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.nav button').forEach(function(x){x.classList.remove('active')});b.classList.add('active');document.querySelectorAll('.panel').forEach(function(x){x.style.display='none'});$(b.dataset.panel).style.display='block'}})
+load();setInterval(function(){api('/api/me').then(function(x){me=x;render()}).catch(function(){})},5000)
+</script>
+</body>
+</html>
