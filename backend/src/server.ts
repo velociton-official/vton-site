@@ -196,7 +196,9 @@ app.get('/api/referral', async (_req, res) => {
   const count = await prisma.user.count({ where: { referredById: user.id } });
   res.json({
     code: user.referralCode,
-    link: 'https://t.me/' + env.BOT_USERNAME + '?start=ref_' + user.referralCode,
+    botLink: 'https://t.me/' + env.BOT_USERNAME + '?start=ref_' + user.referralCode,
+    miniAppLink: 'https://t.me/' + env.BOT_USERNAME + '?startapp=ref_' + user.referralCode,
+    link: 'https://t.me/' + env.BOT_USERNAME + '?startapp=ref_' + user.referralCode,
     referrals: count,
     bonusPercent: env.REFERRAL_PERCENT * 100
   });
