@@ -10,7 +10,12 @@ export type TelegramUser = {
   language_code?: string;
 };
 
-export function validateInitData(initData: string): TelegramUser {
+export type TelegramAuth = {
+  user: TelegramUser;
+  startParam?: string;
+};
+
+export function validateInitData(initData: string): TelegramAuth {
   if (!initData) throw new Error('Missing Telegram initData');
   const params = new URLSearchParams(initData);
   const hash = params.get('hash');
@@ -32,12 +37,17 @@ export function validateInitData(initData: string): TelegramUser {
 
   const rawUser = params.get('user');
   if (!rawUser) throw new Error('Telegram user missing');
-  return JSON.parse(rawUser) as TelegramUser;
+  return {
+    user: JSON.parse(rawUser) as TelegramUser,
+    startParam: params.get('start_param') || undefined
+  };
 }
 
 export function telegramAuth(req: Request, res: Response, next: NextFunction) {
   try {
-    res.locals.telegramUser = validateInitData(String(req.header('x-telegram-init-data') || ''));
+    const auth = validateInitData(String(req.header('x-telegram-init-data') || ''));
+    res.locals.telegramUser = auth.user;
+    res.locals.telegramStartParam = auth.startParam;
     next();
   } catch (e) {
     res.status(401).json({ error: e instanceof Error ? e.message : 'Unauthorized' });
