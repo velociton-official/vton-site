@@ -168,7 +168,7 @@ app.post('/api/claim', async (req, res) => {
 
   const claim = await prisma.$transaction(async tx => {
     const locked = await tx.user.updateMany({
-      where: { id: user.id, balanceRaw: { gte: amount } },
+      where: { id: user.id, balanceRaw: { gte: amount.toString() } },
       data: { balanceRaw: { decrement: amount.toString() } }
     });
     if (locked.count !== 1) throw new Error('Balance changed; retry');
