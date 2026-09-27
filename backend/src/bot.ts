@@ -34,7 +34,8 @@ async function ensureUser(tg: { id: number; username?: string; first_name: strin
 bot.command('start', async ctx => {
   const payload = ctx.match?.trim() || '';
   const referralCode = payload.startsWith('ref_') ? payload.slice(4) : undefined;
-  if (!ctx.from) return;\n  const user = await ensureUser(ctx.from, referralCode);
+  if (!ctx.from) return;
+  const user = await ensureUser(ctx.from, referralCode);
   const appUrl = env.PUBLIC_URL + '/?startapp=ref_' + user.referralCode;
   await ctx.reply(
     '<b>$VTON Miner</b>\n\nПривіт, ' + escapeHtml(ctx.from.first_name) + '!\n\nВідкрий Mini App та накопичуй $VTON.',
@@ -48,6 +49,7 @@ bot.command('start', async ctx => {
 bot.command('help', ctx => ctx.reply('Команди: /start — відкрити $VTON Miner, /ref — отримати реферальне посилання.'));
 
 bot.command('ref', async ctx => {
+  if (!ctx.from) return;
   const user = await prisma.user.findUnique({ where: { telegramId: BigInt(ctx.from.id) } });
   if (!user) return ctx.reply('Спочатку натисни /start.');
   await ctx.reply('Твоє реферальне посилання:\nhttps://t.me/' + env.BOT_USERNAME + '?start=ref_' + user.referralCode);
