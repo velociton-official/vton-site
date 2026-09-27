@@ -22,16 +22,32 @@ app.use('/api', telegramAuth);
 
 async function currentUser(res: express.Response) {
   const tg = res.locals.telegramUser;
-  return prisma.user.upsert({
-    where: { telegramId: BigInt(tg.id) },
-    update: { username: tg.username, firstName: tg.first_name, lastName: tg.last_name, languageCode: tg.language_code },
-    create: {
+  const startParam = typeof res.locals.telegramStartParam === 'string' ? res.locals.telegramStartParam : '';
+  const referralCode = startParam.startsWith('ref_') ? startParam.slice(4) : '';
+
+  const existing = await prisma.user.findUnique({ where: { telegramId: BigInt(tg.id) } });
+  if (existing) {
+    return prisma.user.update({
+      where: { id: existing.id },
+      data: { username: tg.username, firstName: tg.first_name, lastName: tg.last_name, languageCode: tg.language_code }
+    });
+  }
+
+  let referredById: string | undefined;
+  if (referralCode) {
+    const ref = await prisma.user.findUnique({ where: { referralCode } });
+    if (ref && ref.telegramId !== BigInt(tg.id)) referredById = ref.id;
+  }
+
+  return prisma.user.create({
+    data: {
       telegramId: BigInt(tg.id),
       username: tg.username,
       firstName: tg.first_name,
       lastName: tg.last_name,
       languageCode: tg.language_code,
-      referralCode: Math.random().toString(36).slice(2, 10).toUpperCase()
+      referralCode: Math.random().toString(36).slice(2, 10).toUpperCase(),
+      referredById
     }
   });
 }
